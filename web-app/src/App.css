@@ -65,3 +65,98 @@ button {
 .error {
   color: #b00020;
 }
+
+.grid {
+  display: grid;
+  gap: 12px;
+}
+
+.grid.images-grid {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+
+.pack-card h2 {
+  margin-bottom: 4px;
+}
+
+.image-card img {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+}
+
+.actions-row {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  flex: 1 1 120px;
+}
+
+.stat-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.recent-list {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tag-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #f3f3f3;
+  font-size: 12px;
+}
+
+.tag-chip button {
+  border: none;
+  padding: 0 4px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.table-like {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+.table-like th,
+.table-like td {
+  padding: 8px;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  font-size: 14px;
+}
+
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  background: #f3f3f3;
+}

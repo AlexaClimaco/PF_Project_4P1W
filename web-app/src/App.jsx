@@ -19,10 +19,10 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
 
         <Route element={<AdminRoute />}>
-          <Route path="/admin/images" element={<AdminPage title="Images CMS" />} />
-          <Route path="/admin/tags" element={<AdminPage title="Tags CMS" />} />
-          <Route path="/admin/puzzles" element={<AdminPage title="Puzzles CMS" />} />
-          <Route path="/admin/packs" element={<AdminPage title="Packs CMS" />} />
+          <Route path="/admin/images" element={<AdminImagesPage />} />
+          <Route path="/admin/tags" element={<AdminTagsPage />} />
+          <Route path="/admin/puzzles" element={<AdminPuzzlesPage />} />
+          <Route path="/admin/packs" element={<AdminPacksPage />} />
         </Route>
       </Route>
 
@@ -476,6 +476,696 @@ function AdminPage({ title }) {
       <p className="muted">
         Choose one of the Admin pages from the navigation to manage images, tags, puzzles, and packs.
       </p>
+    </AppShell>
+  )
+}
+
+function AdminImagesPage() {
+  const { token } = useAuth()
+  const [images, setImages] = useState([])
+  const [url, setUrl] = useState('')
+  const [fileName, setFileName] = useState('')
+  const [tagFilter, setTagFilter] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  async function loadImages() {
+    setLoading(true)
+    setError('')
+    try {
+      const params = new URLSearchParams()
+      if (tagFilter) {
+        params.set('tag', tagFilter)
+      }
+
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/images?${params.toString()}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) {
+        throw new Error('Failed to load images.')
+      }
+      const data = await response.json()
+      setImages(data)
+    } catch (err) {
+      setError(err.message || 'Failed to load images.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (token) {
+      loadImages()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token])
+
+  async function handleCreate(event) {
+    event.preventDefault()
+    setError('')
+    try {
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/images`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          url: url || null,
+          fileName: fileName || null,
+        }),
+      })
+      if (!response.ok) {
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.message || 'Failed to create image.')
+      }
+      setUrl('')
+      setFileName('')
+      await loadImages()
+    } catch (err) {
+      setError(err.message || 'Failed to create image.')
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm('Delete this image? It will be removed from any puzzles.')) {
+      return
+    }
+    setError('')
+    try {
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/images/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok && response.status !== 404) {
+        throw new Error('Failed to delete image.')
+      }
+      await loadImages()
+    } catch (err) {
+      setError(err.message || 'Failed to delete image.')
+    }
+  }
+
+  return (
+    <AppShell title="Images CMS">
+      <form className="form" onSubmit={handleCreate}>
+        <label>
+          Image URL
+          <input
+            value={url}
+            onChange={(event) => setUrl(event.target.value)}
+            placeholder="https://..."
+          />
+        </label>
+        <label>
+          File name (for uploads)
+          <input
+            value={fileName}
+            onChange={(event) => setFileName(event.target.value)}
+            placeholder="dog.png"
+          />
+        </label>
+        <p className="muted">
+          Provide either a URL, or a file name (for future file uploads). Supported types: .png, .jpg, .jpeg,
+          .webp.
+        </p>
+        <button type="submit">Create image entry</button>
+      </form>
+
+      <div className="actions-row">
+        <label>
+          Filter by tag
+          <input
+            value={tagFilter}
+            onChange={(event) => setTagFilter(event.target.value)}
+            placeholder="animal"
+          />
+        </label>
+        <button type="button" onClick={loadImages}>
+          Apply filter
+        </button>
+      </div>
+
+      {loading && <p>Loading images...</p>}
+      {error && <p className="error">{error}</p>}
+
+      {!loading && images.length === 0 && <p className="muted">No images yet.</p>}
+
+      <div className="grid images-grid">
+        {images.map((image) => (
+          <article key={image.id} className="card image-card">
+            <div>
+              <p className="muted">{image.fileName || 'no file name'}</p>
+              <p className="muted" style={{ wordBreak: 'break-all' }}>
+                {image.url}
+              </p>
+            </div>
+            <div className="actions-row">
+              <button type="button" onClick={() => handleDelete(image.id)}>
+                Delete
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+    </AppShell>
+  )
+}
+
+function AdminTagsPage() {
+  const { token } = useAuth()
+  const [tags, setTags] = useState([])
+  const [name, setName] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  async function loadTags() {
+    setLoading(true)
+    setError('')
+    try {
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/tags`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok) {
+        throw new Error('Failed to load tags.')
+      }
+      const data = await response.json()
+      setTags(data)
+    } catch (err) {
+      setError(err.message || 'Failed to load tags.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (token) {
+      loadTags()
+    }
+  }, [token])
+
+  async function handleCreate(event) {
+    event.preventDefault()
+    setError('')
+    try {
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/tags`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name }),
+      })
+      if (!response.ok) {
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.message || 'Failed to create tag.')
+      }
+      setName('')
+      await loadTags()
+    } catch (err) {
+      setError(err.message || 'Failed to create tag.')
+    }
+  }
+
+  async function handleDelete(tagName) {
+    if (!window.confirm(`Delete tag "${tagName}"? It will be removed from images.`)) {
+      return
+    }
+    setError('')
+    try {
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/tags/${encodeURIComponent(tagName)}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok && response.status !== 404) {
+        throw new Error('Failed to delete tag.')
+      }
+      await loadTags()
+    } catch (err) {
+      setError(err.message || 'Failed to delete tag.')
+    }
+  }
+
+  return (
+    <AppShell title="Tags CMS">
+      <form className="form" onSubmit={handleCreate}>
+        <label>
+          Tag name
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="animal"
+            required
+          />
+        </label>
+        <button type="submit">Create tag</button>
+      </form>
+
+      {loading && <p>Loading tags...</p>}
+      {error && <p className="error">{error}</p>}
+
+      {!loading && tags.length === 0 && <p className="muted">No tags yet.</p>}
+
+      {tags.length > 0 && (
+        <ul className="recent-list">
+          {tags.map((tag) => (
+            <li key={tag.name} className="card recent-item">
+              <span>{tag.name}</span>
+              <button type="button" onClick={() => handleDelete(tag.name)}>
+                Delete
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </AppShell>
+  )
+}
+
+function AdminPuzzlesPage() {
+  const { token } = useAuth()
+  const [puzzles, setPuzzles] = useState([])
+  const [images, setImages] = useState([])
+  const [answer, setAnswer] = useState('')
+  const [hint, setHint] = useState('')
+  const [difficulty, setDifficulty] = useState('easy')
+  const [selectedImageIds, setSelectedImageIds] = useState([])
+  const [tagFilter, setTagFilter] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  async function loadData() {
+    setLoading(true)
+    setError('')
+    try {
+      const [puzzlesResponse, imagesResponse] = await Promise.all([
+        fetch(`${RESOURCE_API_BASE_URL}/cms/puzzles`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${RESOURCE_API_BASE_URL}/cms/images`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ])
+      if (!puzzlesResponse.ok || !imagesResponse.ok) {
+        throw new Error('Failed to load puzzles or images.')
+      }
+      setPuzzles(await puzzlesResponse.json())
+      setImages(await imagesResponse.json())
+    } catch (err) {
+      setError(err.message || 'Failed to load puzzles.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (token) {
+      loadData()
+    }
+  }, [token])
+
+  function toggleImageSelection(id) {
+    setSelectedImageIds((prev) =>
+      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
+    )
+  }
+
+  async function handleCreate(event) {
+    event.preventDefault()
+    setError('')
+    try {
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/puzzles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          answer,
+          hint: hint || null,
+          difficulty,
+          imageIds: selectedImageIds,
+          acceptableVariants: [],
+        }),
+      })
+      if (!response.ok) {
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.message || 'Failed to create puzzle.')
+      }
+      setAnswer('')
+      setHint('')
+      setDifficulty('easy')
+      setSelectedImageIds([])
+      await loadData()
+    } catch (err) {
+      setError(err.message || 'Failed to create puzzle.')
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm('Delete this puzzle?')) {
+      return
+    }
+    setError('')
+    try {
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/puzzles/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok && response.status !== 404) {
+        throw new Error('Failed to delete puzzle.')
+      }
+      await loadData()
+    } catch (err) {
+      setError(err.message || 'Failed to delete puzzle.')
+    }
+  }
+
+  const filteredImages = images.filter((image) =>
+    tagFilter ? image.tags?.some((tag) => tag.toLowerCase().includes(tagFilter.toLowerCase())) : true,
+  )
+
+  return (
+    <AppShell title="Puzzles CMS">
+      <form className="form" onSubmit={handleCreate}>
+        <label>
+          Answer word
+          <input
+            value={answer}
+            onChange={(event) => setAnswer(event.target.value)}
+            placeholder="ANIMAL"
+            required
+          />
+        </label>
+        <label>
+          Hint (optional)
+          <input
+            value={hint}
+            onChange={(event) => setHint(event.target.value)}
+            placeholder="Living creature"
+          />
+        </label>
+        <label>
+          Difficulty
+          <select value={difficulty} onChange={(event) => setDifficulty(event.target.value)}>
+            <option value="easy">easy</option>
+            <option value="medium">medium</option>
+            <option value="hard">hard</option>
+          </select>
+        </label>
+        <label>
+          Filter images by tag
+          <input
+            value={tagFilter}
+            onChange={(event) => setTagFilter(event.target.value)}
+            placeholder="animal"
+          />
+        </label>
+        <p className="muted">
+          Select exactly 4 images below. Validation on the server requires 4 unique image IDs.
+        </p>
+        <div className="grid images-grid">
+          {filteredImages.map((image) => (
+            <button
+              key={image.id}
+              type="button"
+              className="card image-card"
+              onClick={() => toggleImageSelection(image.id)}
+              style={{
+                outline: selectedImageIds.includes(image.id) ? '2px solid #1976d2' : 'none',
+              }}
+            >
+              <p className="muted">{image.fileName}</p>
+              <p className="muted" style={{ wordBreak: 'break-all' }}>
+                {image.url}
+              </p>
+              {image.tags && image.tags.length > 0 && (
+                <p className="muted">
+                  {image.tags.map((tag) => (
+                    <span key={tag} className="pill">
+                      {tag}
+                    </span>
+                  ))}
+                </p>
+              )}
+            </button>
+          ))}
+        </div>
+        <button type="submit" disabled={selectedImageIds.length !== 4}>
+          Create puzzle
+        </button>
+      </form>
+
+      {loading && <p>Loading puzzles...</p>}
+      {error && <p className="error">{error}</p>}
+
+      {!loading && puzzles.length === 0 && <p className="muted">No puzzles yet.</p>}
+
+      {puzzles.length > 0 && (
+        <table className="table-like">
+          <thead>
+            <tr>
+              <th>Answer</th>
+              <th>Difficulty</th>
+              <th>Images</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {puzzles.map((puzzle) => (
+              <tr key={puzzle.id}>
+                <td>{puzzle.answer}</td>
+                <td>{puzzle.difficulty}</td>
+                <td>{puzzle.imageIds.length}</td>
+                <td>
+                  <button type="button" onClick={() => handleDelete(puzzle.id)}>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </AppShell>
+  )
+}
+
+function AdminPacksPage() {
+  const { token } = useAuth()
+  const [packs, setPacks] = useState([])
+  const [puzzles, setPuzzles] = useState([])
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [order, setOrder] = useState('')
+  const [isVisible, setIsVisible] = useState(true)
+  const [selectedPuzzleIds, setSelectedPuzzleIds] = useState([])
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+
+  async function loadData() {
+    setLoading(true)
+    setError('')
+    try {
+      const [packsResponse, puzzlesResponse] = await Promise.all([
+        fetch(`${RESOURCE_API_BASE_URL}/cms/packs`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`${RESOURCE_API_BASE_URL}/cms/puzzles`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ])
+      if (!packsResponse.ok || !puzzlesResponse.ok) {
+        throw new Error('Failed to load packs or puzzles.')
+      }
+      setPacks(await packsResponse.json())
+      setPuzzles(await puzzlesResponse.json())
+    } catch (err) {
+      setError(err.message || 'Failed to load packs.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (token) {
+      loadData()
+    }
+  }, [token])
+
+  function togglePuzzleSelection(id) {
+    setSelectedPuzzleIds((prev) =>
+      prev.includes(id) ? prev.filter((value) => value !== id) : [...prev, id],
+    )
+  }
+
+  async function handleCreate(event) {
+    event.preventDefault()
+    setError('')
+    try {
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/packs`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          isVisible,
+          order: order ? Number(order) : null,
+          puzzleIds: selectedPuzzleIds,
+        }),
+      })
+      if (!response.ok) {
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.message || 'Failed to create pack.')
+      }
+      setName('')
+      setDescription('')
+      setOrder('')
+      setIsVisible(true)
+      setSelectedPuzzleIds([])
+      await loadData()
+    } catch (err) {
+      setError(err.message || 'Failed to create pack.')
+    }
+  }
+
+  async function handlePublish(packId, published) {
+    setError('')
+    try {
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/packs/${packId}/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ published }),
+      })
+      if (!response.ok) {
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.message || 'Failed to change publish status.')
+      }
+      await loadData()
+    } catch (err) {
+      setError(err.message || 'Failed to change publish status.')
+    }
+  }
+
+  async function handleDelete(id) {
+    if (!window.confirm('Delete this pack?')) {
+      return
+    }
+    setError('')
+    try {
+      const response = await fetch(`${RESOURCE_API_BASE_URL}/cms/packs/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!response.ok && response.status !== 404) {
+        throw new Error('Failed to delete pack.')
+      }
+      await loadData()
+    } catch (err) {
+      setError(err.message || 'Failed to delete pack.')
+    }
+  }
+
+  return (
+    <AppShell title="Packs CMS">
+      <form className="form" onSubmit={handleCreate}>
+        <label>
+          Name
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            placeholder="Starter Pack"
+            required
+          />
+        </label>
+        <label>
+          Description
+          <input
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="Short description"
+          />
+        </label>
+        <label>
+          Display order (optional)
+          <input
+            type="number"
+            value={order}
+            onChange={(event) => setOrder(event.target.value)}
+            placeholder="1"
+          />
+        </label>
+        <label>
+          Visible
+          <input
+            type="checkbox"
+            checked={isVisible}
+            onChange={(event) => setIsVisible(event.target.checked)}
+          />
+        </label>
+        <p className="muted">Select puzzles for this pack:</p>
+        <div className="grid">
+          {puzzles.map((puzzle) => (
+            <button
+              key={puzzle.id}
+              type="button"
+              className="card"
+              onClick={() => togglePuzzleSelection(puzzle.id)}
+              style={{
+                outline: selectedPuzzleIds.includes(puzzle.id) ? '2px solid #1976d2' : 'none',
+              }}
+            >
+              <strong>{puzzle.answer}</strong> <span className="muted">({puzzle.difficulty})</span>
+            </button>
+          ))}
+        </div>
+        <button type="submit">Create pack</button>
+      </form>
+
+      {loading && <p>Loading packs...</p>}
+      {error && <p className="error">{error}</p>}
+
+      {!loading && packs.length === 0 && <p className="muted">No packs yet.</p>}
+
+      {packs.length > 0 && (
+        <table className="table-like">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Order</th>
+              <th>Visible</th>
+              <th>Published</th>
+              <th>Puzzles</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {packs.map((pack) => (
+              <tr key={pack.id}>
+                <td>{pack.name}</td>
+                <td>{pack.order}</td>
+                <td>{pack.isVisible ? 'yes' : 'no'}</td>
+                <td>{pack.published ? 'published' : 'draft'}</td>
+                <td>{pack.puzzleIds.length}</td>
+                <td>
+                  <button type="button" onClick={() => handlePublish(pack.id, !pack.published)}>
+                    {pack.published ? 'Unpublish' : 'Publish'}
+                  </button>{' '}
+                  <button type="button" onClick={() => handleDelete(pack.id)}>
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </AppShell>
   )
 }
