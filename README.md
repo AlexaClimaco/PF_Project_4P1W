@@ -41,6 +41,10 @@ npm run dev
 6. Polish, QA, and Launch
 
 ## API contract targets
+### Auth API (implemented in Iteration 1)
+- `POST /auth/register` (email, password, role)
+- `POST /auth/login` (returns JWT + user)
+- `GET /auth/me` (Bearer token required)
 ### Public/Player (resource-api)
 - `GET /packs?random=true`
 - `GET /puzzles/next?packId=...`
@@ -60,3 +64,14 @@ npm run dev
 - Keep admin write operations protected with `role=admin`.
 - Keep payloads small and version endpoints when needed.
 - Use local file storage first, return image URLs from API.
+
+## Iteration 1 current implementation
+- `auth-api` now has working JWT auth with role claim (`player`, `admin`).
+- `web-app` now has:
+  - `/login` and `/register`
+  - Auth context with token persistence
+  - Protected routes for player pages
+  - Admin-only route guards for `/admin/*`
+- Current seeded users in `auth-api`:
+  - `admin@pfproject.local` / `Admin123!` (admin)
+  - `player@pfproject.local` / `Player123!` (player)
