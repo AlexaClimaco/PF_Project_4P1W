@@ -1,7 +1,3 @@
-/* =========================
-   BASE BACKGROUND (DARK DEPTH)
-========================= */
-
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
@@ -10,10 +6,6 @@ body {
   min-height: 100vh;
   color: #fff;
 }
-
-/* =========================
-   PAGE LAYOUT
-========================= */
 
 .page {
   max-width: 900px;
@@ -29,10 +21,6 @@ body {
 .auth-page {
   max-width: 420px;
 }
-
-/* =========================
-   LIQUID GLASS BASE MIXIN STYLE
-========================= */
 
 .card,
 .topbar,
@@ -53,10 +41,6 @@ select {
   color: #fff;
 }
 
-/* =========================
-   GLASS CARD (MAIN SURFACE)
-========================= */
-
 .card {
   border-radius: 16px;
   padding: 18px;
@@ -72,10 +56,6 @@ select {
     inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
-/* =========================
-   TOP BAR (APPLE STYLE HEADER)
-========================= */
-
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -86,10 +66,6 @@ select {
 
   background: rgba(255, 255, 255, 0.06);
 }
-
-/* =========================
-   NAVIGATION PILLS
-========================= */
 
 .nav {
   display: flex;
@@ -112,10 +88,6 @@ select {
 .nav a:hover {
   background: rgba(255, 255, 255, 0.12);
 }
-
-/* =========================
-   FORM ELEMENTS
-========================= */
 
 .form {
   display: grid;
@@ -145,10 +117,6 @@ select {
 input::placeholder {
   color: rgba(255, 255, 255, 0.5);
 }
-
-/* =========================
-   LIQUID BUTTON (APPLE STYLE)
-========================= */
 
 button {
   padding: 11px 14px;
@@ -184,10 +152,6 @@ button:disabled {
   cursor: not-allowed;
 }
 
-/* =========================
-   GRID + CARDS
-========================= */
-
 .grid {
   display: grid;
   gap: 14px;
@@ -197,10 +161,6 @@ button:disabled {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
-/* =========================
-   IMAGE CARDS
-========================= */
-
 .image-card img {
   width: 100%;
   border-radius: 14px;
@@ -209,10 +169,6 @@ button:disabled {
 
   border: 1px solid rgba(255, 255, 255, 0.12);
 }
-
-/* =========================
-   STATS (APPLE DASHBOARD STYLE)
-========================= */
 
 .stats-row {
   display: flex;
@@ -241,10 +197,6 @@ button:disabled {
   font-weight: 700;
 }
 
-/* =========================
-   TAGS / CHIPS
-========================= */
-
 .tag-chip {
   display: inline-flex;
   align-items: center;
@@ -259,9 +211,6 @@ button:disabled {
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-/* =========================
-   TABLE STYLE
-========================= */
 
 .table-like {
   width: 100%;
@@ -274,10 +223,6 @@ button:disabled {
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 14px;
 }
-
-/* =========================
-   TEXT STATES
-========================= */
 
 .muted {
   color: rgba(255, 255, 255, 0.6);
